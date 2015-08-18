@@ -106,6 +106,8 @@ if (MATLAB_FOUND)
 	file(WRITE ${mosek_rmpathfile}
 	    "function rmpath_mosek()\n"
 	    "  mfiledir = fullfile('${CMAKE_CURRENT_BINARY_DIR}', 'mosek', '7', 'toolbox', '${MOSEK_MATLAB_DIR}');\n"
+	    "  jarfiledir = fullfile('${CMAKE_INSTALL_PREFIX}', 'share', 'java');\n"
+	    "  javarmpath(fullfile(jarfiledir, 'mosekmatlab.jar'));\n"
 	    "  rmpath(mfiledir);\n"
 	    "end\n"
 	)
