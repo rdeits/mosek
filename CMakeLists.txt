@@ -6,6 +6,7 @@ project(mosek)
 set(POD_NAME mosek-pod)
 include(cmake/pods.cmake)
 include(cmake/matlab_pods.cmake)
+include(cmake/mex.cmake)
 
 # Set up the system name and various paths
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -54,46 +55,60 @@ install(DIRECTORY ${MOSEK_PLATFORM_PATH}/bin/ DESTINATION lib
         FILES_MATCHING PATTERN "*mosek64*")
 install(DIRECTORY ${MOSEK_PLATFORM_PATH}/bin/ DESTINATION lib
         FILES_MATCHING PATTERN "*iomp5*")
-
-############# Python ################
-pods_install_python_packages("${MOSEK_PLATFORM_PATH}/python/2/")
-
-############# Matlab ################
-pods_configure_matlab_paths()
-set(mosek_addpathfile ${CMAKE_CURRENT_BINARY_DIR}/matlab/addpath_mosek.m)
-file(WRITE ${mosek_addpathfile}
-    "function addpath_mosek()\n"
-    "if verLessThan('matlab','8.1')\n"
-	"  if verLessThan('matlab','7.14'),\n"
-	"	error('Mosek requires MATLAB 7.14 (R2012a) or higher');\n"
-	"  else\n"
-	"    d='r2012a';\n"
-	"  end\n"
-	"else\n"
-	"  d='r2013a';\n"
-	"end\n"
-	"javaaddpathProtectGlobals(fullfile('${CMAKE_CURRENT_BINARY_DIR}','mosek','7','tools','platform','${PLATFORM_NAME}','bin','mosekmatlab.jar'));\n"
-	"addpath(fullfile('${CMAKE_CURRENT_BINARY_DIR}', 'mosek','7','toolbox',d));\n"
-)
-set(mosek_rmpathfile ${CMAKE_CURRENT_BINARY_DIR}/matlab/rmpath_mosek.m)
-file(WRITE ${mosek_rmpathfile}
-    "function rmpath_mosek()\n"
-    "if verLessThan('matlab','8.1')\n"
-    "  if verLessThan('matlab','7.14'),\n"
-    "   error('Mosek requires MATLAB 7.14 (R2012a) or higher');\n"
-    "  else\n"
-    "    d='r2012a';\n"
-    "  end\n"
-    "else\n"
-    "  d='r2013a';\n"
-    "end\n"
-    "javarmpath(fullfile('${CMAKE_CURRENT_BINARY_DIR}','mosek','7','tools','platform','${PLATFORM_NAME}','bin','mosekmatlab.jar'));\n"
-    "rmpath(fullfile('${CMAKE_CURRENT_BINARY_DIR}', 'mosek','7','toolbox',d));\n"
-)
-install(FILES ${mosek_addpathfile} ${mosek_rmpathfile} ${CMAKE_CURRENT_SOURCE_DIR}/javaaddpathProtectGlobals.m DESTINATION matlab/)
-
 pods_install_pkg_config_file(mosek
   LIBS -lmosek64 -L${CMAKE_INSTALL_PREFIX}/lib
   CFLAGS -I${CMAKE_INSTALL_PREFIX}/include
   REQUIRES
   VERSION 7.0.0)
+
+############# Python ################
+pods_install_python_packages("${MOSEK_PLATFORM_PATH}/python/2/")
+
+############# Matlab ################
+if (MATLAB_FOUND)
+	pods_configure_matlab_paths()
+	set(mosek_addpathfile ${CMAKE_CURRENT_BINARY_DIR}/matlab/addpath_mosek.m)
+	execute_process(COMMAND matlab -r "info = ver('matlab'); fprintf(1, '%s', info.Version);"
+	                OUTPUT_VARIABLE MATLAB_VERSION)
+	if (MATLAB_VERSION VERSION_GREATER 8.0)
+		set(MOSEK_MATLAB_DIR r2013a)
+	elseif(MATLAB_VERSION VERSION_GREATER 7.13)
+		set(MOSEK_MATLAB_DIR r2012a)
+	else()
+		message(FATAL_ERROR "Mosek requires MATLAB 7.14 (R2012a) or higher")
+	endif()
+
+	file(WRITE ${mosek_addpathfile}
+	    "function addpath_mosek()\n"
+	    "  mfiledir = fullfile('${CMAKE_CURRENT_BINARY_DIR}', 'mosek', '7', 'toolbox', '${MOSEK_MATLAB_DIR}');\n"
+	    "  addpath(mfiledir);\n"
+	    "  jarfiledir = fullfile('${CMAKE_INSTALL_PREFIX}', 'share', 'java');\n"
+        "  if exist(jarfiledir, 'dir') \n"
+        "    javaaddpathIfNew(jarfiledir);\n"
+        "    for jarfile = dir(fullfile(jarfiledir, '*.jar'))'; \n"
+        "      javaaddpathIfNew(fullfile(jarfiledir, jarfile.name)); \n"
+        "    end\n"
+        "  end\n
+        "end\n"
+        "\n"
+        "function javaaddpathIfNew(p)\n"
+        "  % Add a .jar to the dynamic java classpath only if it hasn't already been added\n"
+        "  if ~any(cellfun(@(x) strcmp(x, p), javaclasspath('-dynamic')))\n"
+        "    javaaddpath(p);\n"
+        "  end\n"
+        "end\n"
+        )
+
+	set(mosek_rmpathfile ${CMAKE_CURRENT_BINARY_DIR}/matlab/rmpath_mosek.m)
+	file(WRITE ${mosek_rmpathfile}
+	    "function rmpath_mosek()\n"
+	    "  mfiledir = fullfile('${CMAKE_CURRENT_BINARY_DIR}', 'mosek', '7', 'toolbox', '${MOSEK_MATLAB_DIR}');\n"
+	    "  rmpath(mfiledir);\n"
+	    "end\n"
+	)
+	install(FILES ${mosek_addpathfile} ${mosek_rmpathfile} DESTINATION matlab)
+endif()
+
+############ Java and Matlab ################
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mosek/7/tools/platform/${PLATFORM_NAME}/bin/mosekmatlab.jar DESTINATION share/java)
+
