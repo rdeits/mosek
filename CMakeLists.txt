@@ -7,6 +7,7 @@ set(POD_NAME mosek-pod)
 include(cmake/pods.cmake)
 include(cmake/matlab_pods.cmake)
 include(cmake/mex.cmake)
+mex_setup()
 
 # Set up the system name and various paths
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -68,8 +69,10 @@ pods_install_python_packages("${MOSEK_PLATFORM_PATH}/python/2/")
 if (MATLAB_FOUND)
 	pods_configure_matlab_paths()
 	set(mosek_addpathfile ${CMAKE_CURRENT_BINARY_DIR}/matlab/addpath_mosek.m)
-	execute_process(COMMAND matlab -r "info = ver('matlab'); fprintf(1, '%s', info.Version);"
-	                OUTPUT_VARIABLE MATLAB_VERSION)
+	execute_process(COMMAND matlab -nodisplay -r "info = ver('matlab'); fprintf(1, '%s', info.Version); exit()"
+	                OUTPUT_VARIABLE MATLAB_VERSION_OUTPUT)
+	string(REGEX REPLACE ".*\n" "" MATLAB_VERSION ${MATLAB_VERSION_OUTPUT})
+	message("matlab version detected as: " ${MATLAB_VERSION})
 	if (MATLAB_VERSION VERSION_GREATER 8.0)
 		set(MOSEK_MATLAB_DIR r2013a)
 	elseif(MATLAB_VERSION VERSION_GREATER 7.13)
@@ -88,7 +91,7 @@ if (MATLAB_FOUND)
         "    for jarfile = dir(fullfile(jarfiledir, '*.jar'))'; \n"
         "      javaaddpathIfNew(fullfile(jarfiledir, jarfile.name)); \n"
         "    end\n"
-        "  end\n
+        "  end\n"
         "end\n"
         "\n"
         "function javaaddpathIfNew(p)\n"
