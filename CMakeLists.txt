@@ -97,7 +97,7 @@ if (MATLAB_FOUND)
         "function javaaddpathIfNew(p)\n"
         "  % Add a .jar to the dynamic java classpath only if it hasn't already been added\n"
         "  if ~any(cellfun(@(x) strcmp(x, p), javaclasspath('-dynamic')))\n"
-        "    javaaddpath(p);\n"
+        "    javaaddpathProtectGlobals(p);\n"
         "  end\n"
         "end\n"
         )
@@ -111,7 +111,8 @@ if (MATLAB_FOUND)
 	    "  rmpath(mfiledir);\n"
 	    "end\n"
 	)
-	install(FILES ${mosek_addpathfile} ${mosek_rmpathfile} DESTINATION matlab)
+	install(FILES ${mosek_addpathfile} ${mosek_rmpathfile} ${CMAKE_CURRENT_SOURCE_DIR}/javaaddpathProtectGlobals.m DESTINATION matlab)
+
 endif()
 
 ############ Java and Matlab ################
