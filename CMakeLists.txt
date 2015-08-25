@@ -52,12 +52,8 @@ endif()
 
 ############# C / C++ ###############
 pods_install_headers(${MOSEK_PLATFORM_PATH}/h/mosek.h DESTINATION mosek)
-install(DIRECTORY ${MOSEK_PLATFORM_PATH}/bin/ DESTINATION lib
-        FILES_MATCHING PATTERN "*mosek64*")
-install(DIRECTORY ${MOSEK_PLATFORM_PATH}/bin/ DESTINATION lib
-        FILES_MATCHING PATTERN "*iomp5*")
 pods_install_pkg_config_file(mosek
-  LIBS -lmosek64 -L${CMAKE_INSTALL_PREFIX}/lib
+  LIBS -lmosek64 -L${MOSEK_PLATFORM_PATH}/bin
   CFLAGS -I${CMAKE_INSTALL_PREFIX}/include
   REQUIRES
   VERSION 7.0.0)
@@ -117,4 +113,3 @@ endif()
 
 ############ Java and Matlab ################
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mosek/7/tools/platform/${PLATFORM_NAME}/bin/mosekmatlab.jar DESTINATION share/java)
-
