@@ -52,6 +52,9 @@ endif()
 
 ############# C / C++ ###############
 pods_install_headers(${MOSEK_PLATFORM_PATH}/h/mosek.h DESTINATION mosek)
+set(mosek_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}mosek64.7.1${CMAKE_SHARED_LIBRARY_SUFFIX})
+add_custom_target(mosek_absolute_library_path ALL
+				  COMMAND install_name_tool -id ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} )
 pods_install_pkg_config_file(mosek
   LIBS -lmosek64 -L${MOSEK_PLATFORM_PATH}/bin
   CFLAGS -I${CMAKE_INSTALL_PREFIX}/include
