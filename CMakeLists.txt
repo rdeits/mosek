@@ -52,16 +52,21 @@ endif()
 
 ############# C / C++ ###############
 pods_install_headers(${MOSEK_PLATFORM_PATH}/h/mosek.h DESTINATION mosek)
-set(mosek_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}mosek64.7.1${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(mosek_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}mosek64${CMAKE_SHARED_LIBRARY_SUFFIX}.7.1)
 set(iomp5_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
+install(FILES 
+        ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} 
+        ${MOSEK_PLATFORM_PATH}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}mosek64${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${MOSEK_PLATFORM_PATH}/bin/${iomp5_library_filename} 
+        DESTINATION lib)
 if (APPLE)
 	add_custom_target(mosek_absolute_library_path ALL
-					  COMMAND install_name_tool -id ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} )
+					  COMMAND install_name_tool -id ${CMAKE_INSTALL_PREFIX}/lib/${mosek_library_filename} ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} )
 	add_custom_target(iomp5_absolute_library_path ALL
-					  COMMAND install_name_tool -id ${MOSEK_PLATFORM_PATH}/bin/${iomp5_library_filename} ${MOSEK_PLATFORM_PATH}/bin/${iomp5_library_filename} )
+					  COMMAND install_name_tool -id ${CMAKE_INSTALL_PREFIX}/lib/${iomp5_library_filename} ${MOSEK_PLATFORM_PATH}/bin/${iomp5_library_filename} )
 endif()
 pods_install_pkg_config_file(mosek
-  LIBS -lmosek64 -liomp5 -L${MOSEK_PLATFORM_PATH}/bin
+  LIBS -lmosek64 -liomp5 -L${CMAKE_INSTALL_PREFIX}/lib
   CFLAGS -I${CMAKE_INSTALL_PREFIX}/include
   REQUIRES
   VERSION 7.0.0)
