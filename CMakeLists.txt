@@ -52,7 +52,11 @@ endif()
 
 ############# C / C++ ###############
 pods_install_headers(${MOSEK_PLATFORM_PATH}/h/mosek.h DESTINATION mosek)
-set(mosek_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}mosek64${CMAKE_SHARED_LIBRARY_SUFFIX}.7.1)
+if (APPLE)
+	set(mosek_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}mosek64.7.1${CMAKE_SHARED_LIBRARY_SUFFIX})
+else()
+	set(mosek_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}mosek64${CMAKE_SHARED_LIBRARY_SUFFIX}.7.1)
+endif()
 set(iomp5_library_filename ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
 install(FILES 
         ${MOSEK_PLATFORM_PATH}/bin/${mosek_library_filename} 
